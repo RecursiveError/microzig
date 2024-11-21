@@ -1,4 +1,4 @@
-//example using style2
+//example using style1
 
 const std = @import("std");
 const microzig = @import("microzig");
