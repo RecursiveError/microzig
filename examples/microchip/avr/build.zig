@@ -3,8 +3,10 @@ const MicroZig = @import("microzig/build");
 const avr = @import("microzig/port/microchip/avr");
 
 const available_examples = [_]Example{
-    .{ .target = avr.boards.arduino.nano, .name = "arduino-nano_blinky", .file = "src/blinky.zig" },
-    .{ .target = avr.boards.arduino.uno_rev3, .name = "arduino-nano_blinky", .file = "src/blinky.zig" },
+    .{ .target = avr.boards.arduino.nano, .name = "arduino-nano_blinky1", .file = "src/blinky1.zig" },
+    .{ .target = avr.boards.arduino.uno_rev3, .name = "arduino-nano_blinky1", .file = "src/blinky1.zig" },
+    .{ .target = avr.boards.arduino.nano, .name = "arduino-nano_blinky2", .file = "src/blinky2.zig" },
+    .{ .target = avr.boards.arduino.uno_rev3, .name = "arduino-nano_blinky2", .file = "src/blinky2.zig" },
 };
 
 pub fn build(b: *std.Build) void {

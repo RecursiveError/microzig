@@ -1,76 +1,26 @@
 const std = @import("std");
 const micro = @import("microzig");
+const generic_hal = @import("Generic_hal/hal.zig");
 const peripherals = micro.chip.peripherals;
 const USART0 = peripherals.USART0;
 
-pub const cpu = micro.cpu;
-const Port = enum(u8) {
-    B = 1,
-    C = 2,
-    D = 3,
+const GPIOB_regs = generic_hal.gpio.GPIORegs{
+    .DDRx = @as(*volatile u8, @ptrFromInt(0x24)),
+    .PORTx = @as(*volatile u8, @ptrFromInt(0x25)),
+    .PINx = @as(*volatile u8, @ptrFromInt(0x23)),
 };
-
-pub const clock = struct {
-    pub const Domain = enum {
-        cpu,
-    };
-};
-
-pub fn parsePin(comptime spec: []const u8) type {
-    const invalid_format_msg = "The given pin '" ++ spec ++ "' has an invalid format. Pins must follow the format \"P{Port}{Pin}\" scheme.";
-
-    if (spec.len != 3)
-        @compileError(invalid_format_msg);
-    if (spec[0] != 'P')
-        @compileError(invalid_format_msg);
-
-    return struct {
-        pub const port: Port = std.meta.stringToEnum(Port, spec[1..2]) orelse @compileError(invalid_format_msg);
-        pub const pin: u3 = std.fmt.parseInt(u3, spec[2..3], 10) catch @compileError(invalid_format_msg);
-    };
-}
 
 pub const gpio = struct {
-    fn regs(comptime desc: type) type {
-        return struct {
-            // io address
-            const pin_addr: u5 = 3 * @intFromEnum(desc.port) + 0x00;
-            const dir_addr: u5 = 3 * @intFromEnum(desc.port) + 0x01;
-            const port_addr: u5 = 3 * @intFromEnum(desc.port) + 0x02;
+    pub const GPIOB = generic_hal.gpio.GPIO(GPIOB_regs);
+    //GPIOC
+    //GPIOD
+};
 
-            // ram mapping
-            const pin = @as(*volatile u8, @ptrFromInt(0x20 + @as(usize, pin_addr)));
-            const dir = @as(*volatile u8, @ptrFromInt(0x20 + @as(usize, dir_addr)));
-            const port = @as(*volatile u8, @ptrFromInt(0x20 + @as(usize, port_addr)));
-        };
-    }
-
-    pub fn setOutput(comptime pin: type) void {
-        cpu.sbi(regs(pin).dir_addr, pin.pin);
-    }
-
-    pub fn setInput(comptime pin: type) void {
-        cpu.cbi(regs(pin).dir_addr, pin.pin);
-    }
-
-    pub fn read(comptime pin: type) micro.gpio.State {
-        return if ((regs(pin).pin.* & (1 << pin.pin)) != 0)
-            .high
-        else
-            .low;
-    }
-
-    pub fn write(comptime pin: type, state: micro.gpio.State) void {
-        if (state == .high) {
-            cpu.sbi(regs(pin).port_addr, pin.pin);
-        } else {
-            cpu.cbi(regs(pin).port_addr, pin.pin);
-        }
-    }
-
-    pub fn toggle(comptime pin: type) void {
-        cpu.sbi(regs(pin).pin_addr, pin.pin);
-    }
+pub const gpio2 = struct {
+    pub const GPIOB = generic_hal.gpio.GPIO2{
+        .disp_pin_mask = 0b00011111, //useless now
+        .regs = &GPIOB_regs,
+    };
 };
 
 pub const uart = struct {
