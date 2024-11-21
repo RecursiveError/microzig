@@ -4,11 +4,7 @@ const generic_hal = @import("Generic_hal/hal.zig");
 const peripherals = micro.chip.peripherals;
 const USART0 = peripherals.USART0;
 
-const GPIOB_regs = generic_hal.gpio.GPIORegs{
-    .DDRx = @as(*volatile u8, @ptrFromInt(0x24)),
-    .PORTx = @as(*volatile u8, @ptrFromInt(0x25)),
-    .PINx = @as(*volatile u8, @ptrFromInt(0x23)),
-};
+const GPIOB_regs: *volatile generic_hal.gpio.GPIORegs = @ptrCast(micro.chip.peripherals.PORTB);
 
 pub const gpio = struct {
     pub const GPIOB = generic_hal.gpio.GPIO(GPIOB_regs);
@@ -19,7 +15,7 @@ pub const gpio = struct {
 pub const gpio2 = struct {
     pub const GPIOB = generic_hal.gpio.GPIO2{
         .disp_pin_mask = 0b00011111, //useless now
-        .regs = &GPIOB_regs,
+        .regs = GPIOB_regs,
     };
 };
 

@@ -15,8 +15,8 @@ pub fn main() void {
     led.set_direction(.output);
     while (true) {
         led.put(1);
-        long_delay(15000);
+        long_delay(25000);
         led.put(0);
-        long_delay(15000);
+        long_delay(25000);
     }
 }
