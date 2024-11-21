@@ -1,16 +1,22 @@
-//example using style1
+//example using style2
 
 const std = @import("std");
 const microzig = @import("microzig");
 const atmega328p = microzig.hal;
+
+fn long_delay(limit: comptime_int) void {
+    for (0..5) |_| {
+        microzig.core.experimental.debug.busy_sleep(limit);
+    }
+}
 
 pub fn main() void {
     const led = atmega328p.gpio.GPIOB.num(5);
     led.set_direction(.output);
     while (true) {
         led.put(1);
-        microzig.core.experimental.debug.busy_sleep(15000);
+        long_delay(15000);
         led.put(0);
-        microzig.core.experimental.debug.busy_sleep(15000);
+        long_delay(15000);
     }
 }
