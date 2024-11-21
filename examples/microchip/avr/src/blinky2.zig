@@ -14,9 +14,7 @@ pub fn main() void {
     const led = atmega328p.gpio2.GPIOB.num(5);
     led.set_direction(.output);
     while (true) {
-        led.put(1);
-        long_delay(10000);
-        led.put(0);
+        led.toggle();
         long_delay(10000);
     }
 }

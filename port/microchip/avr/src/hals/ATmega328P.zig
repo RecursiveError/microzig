@@ -5,18 +5,19 @@ const peripherals = micro.chip.peripherals;
 const USART0 = peripherals.USART0;
 
 const GPIOB_regs: *volatile generic_hal.gpio.GPIORegs = @ptrCast(micro.chip.peripherals.PORTB);
+const GPIOC_regs: *volatile generic_hal.gpio.GPIORegs = @ptrCast(micro.chip.peripherals.PORTC);
+const GPIOD_regs: *volatile generic_hal.gpio.GPIORegs = @ptrCast(micro.chip.peripherals.PORTD);
 
 pub const gpio = struct {
     pub const GPIOB = generic_hal.gpio.GPIO(GPIOB_regs);
-    //GPIOC
-    //GPIOD
+    pub const GPIOC = generic_hal.gpio.GPIO(GPIOC_regs);
+    pub const GPIOD = generic_hal.gpio.GPIO(GPIOD_regs);
 };
 
 pub const gpio2 = struct {
-    pub const GPIOB = generic_hal.gpio.GPIO2{
-        .disp_pin_mask = 0b00011111, //useless now
-        .regs = GPIOB_regs,
-    };
+    pub const GPIOB = generic_hal.gpio.GPIO2{ .regs = GPIOB_regs };
+    pub const GPIOC = generic_hal.gpio.GPIO2{ .regs = GPIOC_regs };
+    pub const GPIOD = generic_hal.gpio.GPIO2{ .regs = GPIOD_regs };
 };
 
 pub const uart = struct {
