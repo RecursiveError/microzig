@@ -31,7 +31,7 @@ const USART0_regs = generic_hal.usart.USART_regs{
 
 pub const usart = struct {
     pub const Config = generic_hal.usart.Config;
-    pub const UART0 = generic_hal.usart.Uart(USART0_regs);
+    pub const UART0 = generic_hal.usart.USART.init(USART0_regs);
 };
 
 const clock = struct {};

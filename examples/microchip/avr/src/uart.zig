@@ -20,7 +20,7 @@ pub fn main() void {
     const led = atmega328p.gpio.GPIOB.num(5);
     led.set_direction(.output);
 
-    UART0.apply_runtime(config) catch {
+    UART0.apply(config) catch {
         while (true) {
             led.toggle();
             long_delay(15000);
