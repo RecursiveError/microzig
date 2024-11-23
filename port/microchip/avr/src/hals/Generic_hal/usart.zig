@@ -72,6 +72,7 @@ pub const FlowControl = enum {
 };
 
 pub const Config = struct {
+    cpu_clock: u32,
     baud_rate: u32,
     word_bits: WordBits = .eight,
     stop_bits: StopBits = .one,
@@ -82,8 +83,8 @@ pub const Config = struct {
 
 //error types
 pub const ConfigError = error{
-    UnsupportedBaudRate,
-    UnsupportedFlowControl,
+    BaudRate,
+    FlowControl,
 };
 
 pub const ReceiveError = error{
@@ -103,19 +104,38 @@ pub fn Uart(usart_regs: USART_regs) type {
         const regs = usart_regs;
         const Self = @This();
 
-        fn computeDivider(baud_rate: comptime_int) u12 {
-            const pclk = 16_000_000;
-            const rate = pclk / 16 / baud_rate - 1;
+        fn computeDivider(baud_rate: u32, cpu_clock: u32) ConfigError!u12 {
+            const clock_div = std.math.divTrunc(u32, cpu_clock, 16) catch return ConfigError.BaudRate;
+            const rate = std.math.divTrunc(u32, clock_div, baud_rate) catch return ConfigError.BaudRate;
+            if (rate < 1) return ConfigError.BaudRate;
 
-            return std.math.cast(u12, rate) orelse @compileError("Unsupported BaudRate");
+            return std.math.cast(u12, (rate - 1)) orelse return ConfigError.BaudRate;
+        }
+
+        pub fn check_fc_support(fc: FlowControl) !void {
+            if ((fc != .none) and (regs.UCSRD == null)) {
+                return ConfigError.FlowControl;
+            }
         }
 
         pub fn apply(comptime config: Config) !void {
-            if ((config.flow_control != .none) and (regs.UCSRD == null)) {
-                return error.UnsupportedFlowControl;
-            }
+            comptime check_fc_support(config.flow_control) catch {
+                @compileError("this target does not support Hardware Flow Control");
+            };
+            const ubrr = comptime computeDivider(config.baud_rate, config.cpu_clock) catch {
+                @compileError(std.fmt.comptimePrint("this target does not support {} Baudrate speed with {} clock speed", .{ config.baud_rate, config.cpu_clock }));
+            };
 
-            const ubrr_val = comptime computeDivider(config.baud_rate);
+            apply_internal(config, ubrr);
+        }
+
+        pub fn apply_runtime(config: Config) ConfigError!void {
+            try check_fc_support(config.flow_control);
+            const ubrr = try computeDivider(config.baud_rate, config.cpu_clock);
+            apply_internal(config, ubrr);
+        }
+
+        pub fn apply_internal(config: Config, ubrr_val: u12) void {
             set_wordbits(config.word_bits);
             set_stopbits(config.stop_bits);
             set_parity(config.parity);
@@ -123,12 +143,12 @@ pub fn Uart(usart_regs: USART_regs) type {
             set_flowcontrol(config.flow_control);
             set_baudrate(ubrr_val);
 
-            Self.regs.UCSRB.modify(.{
+            regs.UCSRB.modify(.{
                 .TXEN = 1,
                 .RXEN = 1,
             });
 
-            Self.regs.UCSRC.modify(.{
+            regs.UCSRC.modify(.{
                 .UCSZ = 3,
                 .USBS = 1,
             });
@@ -141,17 +161,17 @@ pub fn Uart(usart_regs: USART_regs) type {
                 .seven => 0b10,
                 .eight => 0b11,
             };
-            Self.regs.UCSRB.modify(.{
+            regs.UCSRB.modify(.{
                 .UCSZ2 = 0, //only for nine bits words
             });
-            Self.regs.UCSRC.modify(.{
+            regs.UCSRC.modify(.{
                 .UCSZ = ucsz,
             });
         }
 
         fn set_stopbits(stopbits: StopBits) void {
             const value: u1 = @intFromEnum(stopbits);
-            Self.regs.UCSRC.modify(.{
+            regs.UCSRC.modify(.{
                 .USBS = value,
             });
         }
@@ -163,14 +183,14 @@ pub fn Uart(usart_regs: USART_regs) type {
                 .odd => 0b11,
             };
 
-            Self.regs.UCSRC.modify(.{
+            regs.UCSRC.modify(.{
                 .UPM = value,
             });
         }
 
         fn set_speed(speed: Speed) void {
             const value: u1 = @intFromEnum(speed);
-            Self.regs.UCSRA.modify(.{
+            regs.UCSRA.modify(.{
                 .U2X = value,
             });
         }
@@ -187,7 +207,7 @@ pub fn Uart(usart_regs: USART_regs) type {
                 },
                 else => {},
             }
-            if (Self.regs.UCSRD) |UCSRD| {
+            if (regs.UCSRD) |UCSRD| {
                 UCSRD.modify(.{
                     .RTSEN = rts,
                     .CTSEN = cts,
@@ -196,17 +216,17 @@ pub fn Uart(usart_regs: USART_regs) type {
         }
 
         fn set_baudrate(value: u12) void {
-            Self.regs.UBRR.* = value;
+            regs.UBRR.* = value;
         }
 
         //just for tests
         pub fn read_byte() ReceiveError!u8 {
-            while (Self.regs.UCSRA.read().RXC != 1) {}
-            return Self.regs.UDR.*;
+            while (regs.UCSRA.read().RXC != 1) {}
+            return regs.UDR.*;
         }
         pub fn write_byte(byte: u8) void {
-            while (Self.regs.UCSRA.read().UDRE != 1) {}
-            Self.regs.UDR.* = byte;
+            while (regs.UCSRA.read().UDRE != 1) {}
+            regs.UDR.* = byte;
         }
     };
 }

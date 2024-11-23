@@ -9,10 +9,10 @@ fn long_delay(limit: comptime_int) void {
 }
 
 const config = atmega328p.usart.Config{
+    .cpu_clock = 16_000_000,
     .baud_rate = 9600,
 };
 const UART0 = atmega328p.usart.UART0;
-const USART0 = microzig.chip.peripherals.USART0;
 
 const msg = "hello uart!0$!\n";
 
@@ -20,7 +20,7 @@ pub fn main() void {
     const led = atmega328p.gpio.GPIOB.num(5);
     led.set_direction(.output);
 
-    UART0.apply(config) catch {
+    UART0.apply_runtime(config) catch {
         while (true) {
             led.toggle();
             long_delay(15000);
