@@ -2,6 +2,7 @@ const std = @import("std");
 const assert = std.debug.assert;
 
 const microzig = @import("microzig");
+const generic_hal = @import("../genericF1_hal/hal.zig");
 pub const peripherals = microzig.chip.peripherals;
 
 const GPIOA = peripherals.GPIOA;
@@ -11,6 +12,13 @@ const GPIOD = peripherals.GPIOD;
 const GPIOE = peripherals.GPIOE;
 const GPIOF = peripherals.GPIOF;
 const GPIOG = peripherals.GPIOG;
+
+pub const gpio_test = struct {
+    pub const Mode = generic_hal.gpio.Mode;
+    pub const GPIOA_t = generic_hal.gpio.GPIO.init(@ptrCast(GPIOA));
+    pub const GPIOB_t = generic_hal.gpio.GPIO.init(@ptrCast(GPIOB));
+    pub const GPIOC_t = generic_hal.gpio.GPIO.init(@ptrCast(GPIOC));
+};
 
 const GPIO = @TypeOf(GPIOA);
 

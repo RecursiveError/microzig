@@ -4586,7 +4586,7 @@ pub fn init(dep: *std.Build.Dependency) Self {
             },
         },
         .hal = .{
-            .root_source_file = b.path("src/hals/STM32F103/hal.zig"),
+            .root_source_file = b.path("src/hals/STM32F103.zig"),
         },
     };
 
@@ -4611,7 +4611,7 @@ pub fn init(dep: *std.Build.Dependency) Self {
             },
         },
         .hal = .{
-            .root_source_file = b.path("src/hals/STM32F103/hal.zig"),
+            .root_source_file = b.path("src/hals/STM32F103.zig"),
         },
     };
 
