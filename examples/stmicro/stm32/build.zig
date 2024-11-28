@@ -12,7 +12,10 @@ pub fn build(b: *std.Build) void {
     const mb = MicroBuild.init(b, mz_dep) orelse return;
 
     const available_examples = [_]Example{
-        .{ .target = mb.ports.stm32.chips.STM32F103C8, .name = "STM32F103C8", .file = "src/blinky.zig" },
+        .{ .target = mb.ports.stm32.chips.STM32F103C8, .name = "STM32F1_test", .file = "src/blinky.zig" },
+        .{ .target = mb.ports.stm32.chips.STM32F103C8, .name = "STM32F1_current_pin", .file = "src/current_pin.zig" },
+        .{ .target = mb.ports.stm32.chips.STM32F103C8, .name = "STM32F1_current_gpio", .file = "src/current_gpio.zig" },
+
         // TODO: stm32.pins.GlobalConfiguration is not available on those targets
         // .{ .target = stm32.chips.stm32f303vc, .name = "stm32f303vc", .file = "src/blinky.zig" },
         // .{ .target = stm32.chips.stm32f407vg, .name = "stm32f407vg", .file = "src/blinky.zig" },
