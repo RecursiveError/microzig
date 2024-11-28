@@ -93,12 +93,13 @@ pub const GPIO = struct {
     }
     //this can be comtime only
     pub fn num(self: *const GPIO, pin: u4) !Pin {
-        if ((self.pin_mask & @as(u16, 1) << pin) != 1) {
-            return error.InvalidPin;
+        const mask: u16 = @as(u16, 1) << pin;
+        if ((self.pin_mask & mask) != 0) {
+            return Pin{
+                .pin = pin,
+                .regs = self.regs,
+            };
         }
-        return Pin{
-            .pin = pin,
-            .regs = self.regs,
-        };
+        return error.InvalidPin;
     }
 };
