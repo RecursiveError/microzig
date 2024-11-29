@@ -15,9 +15,9 @@ const GPIOG = peripherals.GPIOG;
 
 pub const gpio_test = struct {
     pub const Mode = generic_hal.gpio.Mode;
-    pub const GPIOA_t = generic_hal.gpio.GPIO(@ptrCast(GPIOA), 0xFFFF);
-    pub const GPIOB_t = generic_hal.gpio.GPIO(@ptrCast(GPIOB), 0xFFFF);
-    pub const GPIOC_t = generic_hal.gpio.GPIO(@ptrCast(GPIOC), 0xFFFF);
+    pub const GPIOA_t = generic_hal.gpio.GPIO(GPIOA);
+    pub const GPIOB_t = generic_hal.gpio.GPIO(GPIOB);
+    pub const GPIOC_t = generic_hal.gpio.GPIO(GPIOC);
 };
 
 const GPIO = @TypeOf(GPIOA);
