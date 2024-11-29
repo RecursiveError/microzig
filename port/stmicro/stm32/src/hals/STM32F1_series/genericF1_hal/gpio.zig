@@ -37,69 +37,57 @@ pub const Mode = union(enum) {
     output_2Mhz: Output,
     output_50Mhz: Output,
 };
+pub fn GPIO(gp_regs: *volatile GPIO_regs, gp_pin_mask: u16) type {
+    return struct {
+        const regs = gp_regs;
+        const pin_mask = gp_pin_mask;
+        const Pin = enum(u4) {
+            _,
 
-//maybe create a output_pin and input_pin struct
-pub const Pin = struct {
-    regs: *volatile GPIO_regs,
-    pin: u4,
+            pub fn set_mode(self: Pin, mode: Mode) void {
+                const pin = @intFromEnum(self);
+                const mode_val: u4 = @intFromEnum(mode);
+                const conf_val: u4 = switch (mode) {
+                    else => |value| @intFromEnum(value),
+                };
+                const bits: u32 = mode_val | (conf_val << 2);
+                if (pin > 7) {
+                    const pin_offset: u5 = pin - 8;
+                    const offset = @as(u5, pin_offset) << 2;
+                    regs.CR[1] &= ~(@as(u32, 0b1111) << offset);
+                    regs.CR[1] |= bits << offset;
+                } else {
+                    const offset = @as(u5, pin) << 2;
+                    regs.CR[0] &= ~(@as(u32, 0b1111) << offset);
+                    regs.CR[0] |= bits << offset;
+                }
+            }
 
-    pub fn set_mode(self: *const Pin, mode: Mode) void {
-        const pin = self.pin;
-        const mode_val: u4 = @intFromEnum(mode);
-        const conf_val: u4 = switch (mode) {
-            else => |value| @intFromEnum(value),
+            pub fn put(self: Pin, value: u1) void {
+                switch (value) {
+                    0 => regs.ODR &= ~(@as(u32, value) << @intFromEnum(self)),
+                    1 => regs.ODR |= @as(u32, value) << @intFromEnum(self),
+                }
+            }
+
+            pub fn read(self: Pin) u1 {
+                return if ((regs.IDR & (@as(u32, 1) << @intFromEnum(self))) != 0) 1 else 0;
+            }
+
+            pub fn read_state(self: Pin) u1 {
+                return if ((regs.ODR & (@as(u32, 1) << @intFromEnum(self))) != 0) 1 else 0;
+            }
+
+            pub fn toggle(self: Pin) void {
+                regs.ODR ^= @as(u32, 1) << @intFromEnum(self);
+            }
         };
-        const bits: u32 = mode_val | (conf_val << 2);
-        if (pin > 7) {
-            const pin_offset: u5 = pin - 8;
-            const offset = @as(u5, pin_offset) << 2;
-            self.regs.CR[1] &= ~(@as(u32, 0b1111) << offset);
-            self.regs.CR[1] |= bits << offset;
-        } else {
-            const offset = @as(u5, pin) << 2;
-            self.regs.CR[0] &= ~(@as(u32, 0b1111) << offset);
-            self.regs.CR[0] |= bits << offset;
+        //this can be comtime only
+        pub fn num(pin: u4) !Pin {
+            if ((pin_mask & @as(u16, 1) << pin) != 0) {
+                return @enumFromInt(pin);
+            }
+            return error.InvalidPin;
         }
-    }
-
-    pub fn put(self: *const Pin, value: u1) void {
-        switch (value) {
-            0 => self.regs.ODR &= ~(@as(u32, value) << self.pin),
-            1 => self.regs.ODR |= @as(u32, value) << self.pin,
-        }
-    }
-
-    pub fn read(self: *const Pin) u1 {
-        return if ((self.regs.IDR & (@as(u32, 1) << self.pin)) != 0) 1 else 0;
-    }
-
-    pub fn read_state(self: *const Pin) u1 {
-        return if ((self.regs.ODR & (@as(u32, 1) << self.pin)) != 0) 1 else 0;
-    }
-
-    pub fn toggle(self: *const Pin) void {
-        self.regs.ODR ^= @as(u32, 1) << self.pin;
-    }
-};
-
-pub const GPIO = struct {
-    regs: *volatile GPIO_regs,
-    pin_mask: u16 = 0xFFFF, //just for test
-
-    pub fn init(comptime regs: *volatile GPIO_regs) GPIO {
-        return GPIO{
-            .regs = regs,
-        };
-    }
-    //this can be comtime only
-    pub fn num(self: *const GPIO, pin: u4) !Pin {
-        const mask: u16 = @as(u16, 1) << pin;
-        if ((self.pin_mask & mask) != 0) {
-            return Pin{
-                .pin = pin,
-                .regs = self.regs,
-            };
-        }
-        return error.InvalidPin;
-    }
-};
+    };
+}
