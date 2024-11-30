@@ -11,7 +11,7 @@ pub fn main() !void {
     });
     const led1 = stm32.gpio.gpio_test.GPIOC_t.num(13);
     const led2 = stm32.gpio.gpio_test.GPIOB_t.num(6);
-    const led3 = stm32.gpio.gpio_test.GPIOA_t.num(7);
+    const led3: stm32.gpio.gpio_test.GPIOA_t = @enumFromInt(7);
 
     const mode = stm32.gpio.gpio_test.Mode{ .output_2Mhz = .push_pull };
     inline for (&.{ led1, led2, led3 }) |pin| {
