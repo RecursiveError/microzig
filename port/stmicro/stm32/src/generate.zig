@@ -389,7 +389,7 @@ pub fn main() !void {
                 if (std.mem.eql(u8, child_name, registers.block))
                     break child_id;
             } else return error.FailedToFindRegisterGroup;
-
+            std.log.info("{s}-{s}:{s}={d}", .{ chip_file.value.name, peripheral.name, periph_name, peripheral.address });
             _ = try db.create_peripheral_instance(device_id, register_group_id, .{
                 .name = peripheral.name,
                 .offset = peripheral.address,

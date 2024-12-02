@@ -30,9 +30,12 @@ pub fn GPIO(gp_regs: *volatile GPIO_regs) type {
             const pin = @intFromEnum(self);
             const mode_val: u4 = @intFromEnum(mode);
             const conf_val: u4 = switch (mode) {
-                else => |value| @intFromEnum(value),
+                .input => |value| @intFromEnum(value),
+                .output_10Mhz => |value| @intFromEnum(value),
+                .output_2Mhz => |value| @intFromEnum(value),
+                .output_50Mhz => |value| @intFromEnum(value),
             };
-            const bits: u32 = mode_val | (conf_val << 2);
+            const bits: u32 = mode_val + (conf_val << 2);
             if (pin > 7) {
                 const pin_offset: u5 = pin - 8;
                 const offset = @as(u5, pin_offset) << 2;
