@@ -1,6 +1,7 @@
 const microzig = @import("microzig");
 const syscon = @import("./syscon.zig");
 const gpio = @import("./gpio.zig");
+const mapper = @import("mapper.zig");
 
 const PORT_T = microzig.chip.types.peripherals.PORT0;
 
@@ -9,7 +10,7 @@ pub const PinConfig = struct {
     MUX: u3,
 };
 
-const PIN = @FieldType(microzig.chip.types.peripherals.PORT0, "PCR0");
+const PIN_T = @FieldType(microzig.chip.types.peripherals.PORT0, "PCR0");
 
 pub fn num(comptime n: u2) Port {
     return @fromBackingInt(n);
@@ -47,17 +48,14 @@ pub const Port = enum(u3) {
         };
     }
 
-    pub fn configure_pin(self: Port, pin: u5, config: PinConfig) void {
-        const regs = self.get_regs();
-        const pin_regs: *volatile PIN = @ptrFromInt(@as(usize, @intFromPtr(regs)) + (0x80 + (4 * @as(usize, pin))));
+    pub fn configure_pin(pin: mapper.PIN, config: PinConfig) void {
+        const map = pin.map();
+        const regs = get_regs(@fromBackingInt(@intCast(map.port)));
+        const pin_regs: *volatile PIN_T = @ptrFromInt(@as(usize, @intFromPtr(regs)) + (0x80 + (4 * @as(usize, map.pin))));
 
         pin_regs.modify_one("LK", .lk0);
         defer pin_regs.modify_one("LK", .lk1);
 
         pin_regs.modify_one("MUX", @fromBackingInt(@intCast(config.MUX)));
-    }
-
-    pub fn get_gpio(comptime port: Port, comptime pin: u5) gpio.GPIO {
-        return gpio.num(@backingInt(port), pin);
     }
 };

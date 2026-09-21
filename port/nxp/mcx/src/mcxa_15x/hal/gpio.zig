@@ -1,17 +1,22 @@
 const microzig = @import("microzig");
 const syscon = @import("./syscon.zig");
+const mapper = @import("mapper.zig");
+
+const PIN = mapper.PIN;
+const PIN_MAP = mapper.PIN_MAP;
 
 const chip = microzig.chip;
 
-pub fn num(comptime n: u2, comptime pin: u5) GPIO {
-    return @fromBackingInt(@as(u8, n) << 5 | pin);
+pub fn from_pin(pin: mapper.PIN) GPIO {
+    return @bitCast(pin);
 }
 
 pub const GPIO = enum(u8) {
     _,
 
     pub fn init(comptime gpio: GPIO) void {
-        const tag = switch (gpio.get_n()) {
+        const map: PIN_MAP = @bitCast(@backingInt(gpio));
+        const tag = switch (map.port) {
             0 => .GPIO0,
             1 => .GPIO1,
             2 => .GPIO2,
@@ -85,12 +90,14 @@ pub const GPIO = enum(u8) {
         };
     }
 
-    inline fn get_n(gpio: GPIO) u3 {
-        return @intCast(@backingInt(gpio) >> 5);
+    pub inline fn get_n(gpio: GPIO) u3 {
+        const map: PIN_MAP = @bitCast(@backingInt(gpio));
+        return map.port;
     }
 
-    inline fn get_pin(gpio: GPIO) u5 {
-        return @intCast(@backingInt(gpio) & 0x1f);
+    pub inline fn get_pin(gpio: GPIO) u5 {
+        const map: PIN_MAP = @bitCast(@backingInt(gpio));
+        return map.pin;
     }
 
     inline fn get_mask(gpio: GPIO) u32 {

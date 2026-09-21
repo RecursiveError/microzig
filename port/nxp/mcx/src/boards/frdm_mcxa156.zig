@@ -23,9 +23,9 @@ const RGB_Pin = packed struct(u3) {
 //expose the RGB led pins as GPIOs
 pub const Digital_RGB_Led = struct {
     const port3 = hal.port.num(3);
-    const R = port3.get_gpio(12);
-    const G = port3.get_gpio(13);
-    const B = port3.get_gpio(0);
+    const R = hal.gpio.from_pin(.P3_12);
+    const G = hal.gpio.from_pin(.P3_13);
+    const B = hal.gpio.from_pin(.P3_0);
 
     pub fn init() void {
         port3.init();
